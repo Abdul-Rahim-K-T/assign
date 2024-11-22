@@ -66,7 +66,9 @@ func createTables() {
 		skills TEXT,
 		education TEXT,
 		experience TEXT,
-		phone VARCHAR(15)
+		phone VARCHAR(15),
+		name VARCHAR(255),
+		email VARCHAR(255)
 	);
 
 	-- Create jobs table
@@ -81,6 +83,13 @@ func createTables() {
 		FOREIGN KEY (posted_by_id) REFERENCES users(id) ON DELETE SET NULL
 	);
 
+	CREATE TABLE IF NOT EXISTS applications (
+    	id SERIAL PRIMARY KEY,
+    	user_id INT NOT NULL,
+    	job_id INT NOT NULL,
+    	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    	FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+	);
 	-- Add email column if not exists
 	DO $$ 
 	BEGIN

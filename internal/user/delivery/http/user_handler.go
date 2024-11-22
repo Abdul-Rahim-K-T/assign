@@ -168,10 +168,10 @@ func (h *UserHandler) uploadResume(w http.ResponseWriter, r *http.Request) {
 	if profileCount == 0 {
 		// No profile found, create a new one
 		_, err := database.DB.Exec(
-			`INSERT INTO profiles (user_id, resume_file, skills, education, experience, phone) 
-			VALUES ($1, $2, $3, $4, $5, $6)`,
+			`INSERT INTO profiles (user_id, resume_file, skills, education, experience, name, email, phone) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			claims.UserID, filePath, joinSkills(parsedResume.Skills), educationJSON,
-			experienceJSON, parsedResume.Phone,
+			experienceJSON, parsedResume.Name, parsedResume.Email, parsedResume.Phone,
 		)
 		if err != nil {
 			fmt.Printf("Failed to create profile: %v", err)
@@ -239,8 +239,10 @@ func (h *UserHandler) ApplyForJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the applicant has already applied for the job
+	// Logging for debugging
+	log.Printf("Applying for Job: jobID=%d, userID=%d", jobID, claims.UserID)
 
+	// Check if the applicant has already applied for the job
 	existingApplication, err := h.Usecase.GetApplicationByUserAndJob(strconv.Itoa(claims.UserID), strconv.Itoa(jobID))
 	if err != nil {
 		http.Error(w, "Failed to check existing application", http.StatusInternalServerError)
@@ -248,6 +250,7 @@ func (h *UserHandler) ApplyForJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if existingApplication != nil {
+		log.Printf("User has already applied for the job: userID=%d, jobID=%d", claims.UserID, jobID)
 		http.Error(w, "You have already applied for this job", http.StatusBadRequest)
 		return
 	}

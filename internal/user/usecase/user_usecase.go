@@ -82,7 +82,7 @@ func (u *UserUsecaseImpl) GetJobs() ([]models.Job, error) {
 // GetApplicationByUserAndJob checks if a user has already applied for a specific job
 func (u *UserUsecaseImpl) GetApplicationByUserAndJob(userID, jobID string) (*models.Application, error) {
 	application := &models.Application{}
-	err := u.Repo.GetApplicationByUserAndJob(userID, jobID, application)
+	application, err := u.Repo.GetApplicationByUserAndJob(userID, jobID)
 	if err != nil {
 		return nil, fmt.Errorf("application not found")
 	}

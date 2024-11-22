@@ -107,3 +107,4 @@ func ParseResumeWithAPILayer(resumeData []byte) (*ParsedResume, error) {
 
 // }
 // https://chatgpt.com/c/673d8290-1db0-800f-9db5-c02863fd8d38
+// https://chatgpt.com/c/673d8290-1db0-800f-9db5-c02863fd8d38

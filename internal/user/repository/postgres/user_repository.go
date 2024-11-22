@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"log"
 	"recruitment-management/internal/models"
 	"time"
 
@@ -14,7 +15,7 @@ type UserRepository interface {
 	CreateUser(user models.User) error
 	GetUserByEmail(email string) (models.User, error)
 	GetUserByID(userID int, user *models.User) error
-	GetApplicationByUserAndJob(userID, jobID string, application *models.Application) error
+	GetApplicationByUserAndJob(userID, jobID string) (*models.Application, error)
 	CreateApplication(application *models.Application) error
 	UpdateJobApplicationsCount(JobID string) error
 
@@ -88,16 +89,21 @@ func (r *UserRepositoryImpl) FetchJobs() ([]models.Job, error) {
 	return jobs, nil
 }
 
-func (r *UserRepositoryImpl) GetApplicationByUserAndJob(userID, JobID string, application *models.Application) error {
+func (r *UserRepositoryImpl) GetApplicationByUserAndJob(userID, JobID string) (*models.Application, error) {
 	query := "SELECT id, user_id, job_id FROM applications WHERE user_id = $1 AND job_id = $2 LIMIT 1"
+	var application models.Application
+	// Logging for debugging
+	log.Printf("Executing query: %s with userID=%s, jobID=%s", query, userID, JobID)
+
 	err := r.DB.QueryRow(query, userID, JobID).Scan(&application.ID, &application.UserID, &application.JobID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil // No existing application found
+			log.Println("No existing application found")
+			return nil, nil // No existing application found
 		}
-		return fmt.Errorf("failed to get application: %v", err)
+		return nil, fmt.Errorf("failed to get application: %v", err)
 	}
-	return nil
+	return &application, nil
 }
 
 func (r *UserRepositoryImpl) CreateApplication(application *models.Application) error {
@@ -110,7 +116,7 @@ func (r *UserRepositoryImpl) CreateApplication(application *models.Application) 
 }
 
 func (r *UserRepositoryImpl) UpdateJobApplicationsCount(jobID string) error {
-	query := "UPDATE jobs SET total_application = total_applications + 1 WHERE id = $1"
+	query := "UPDATE jobs SET total_applications = total_applications + 1 WHERE id = $1"
 	_, err := r.DB.Exec(query, jobID)
 	if err != nil {
 		return fmt.Errorf("failed to update job application count: %v", err)
