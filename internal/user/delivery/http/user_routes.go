@@ -25,6 +25,7 @@ func SetupUserRoutes(r *mux.Router) {
 	// Routes for applicant
 	r.Handle("/uploadResume", jwt.AuthMiddleware(jwt.ApplicantMiddleware(http.HandlerFunc(handler.uploadResume)))).Methods("POST")
 	r.Handle("/jobs/apply", jwt.AuthMiddleware(jwt.ApplicantMiddleware(http.HandlerFunc(handler.ApplyForJob)))).Methods("GET")
+	r.Handle("/predictProfileScore", jwt.AuthMiddleware(jwt.ApplicantMiddleware(http.HandlerFunc(handler.PredictProfileScore)))).Methods("GET")
 
 	// Routes for admins - use AdminMiddleware for adminspecific rout
 	r.Handle("/admin/job", jwt.AuthMiddleware(jwt.AdminMiddleware(http.HandlerFunc(handler.CreateJob)))).Methods("POST")

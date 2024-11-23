@@ -3,7 +3,9 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"log"
 	"recruitment-management/internal/models"
+	"recruitment-management/internal/services"
 	"recruitment-management/internal/user/repository/postgres"
 	"recruitment-management/pkg/jwt"
 
@@ -17,6 +19,8 @@ type UserUsecase interface {
 	GetApplicationByUserAndJob(userID, jobID string) (*models.Application, error)
 	ApplyForJob(application *models.Application) error
 	UpdateJobApplicationsCount(jobID string) error
+
+	PredictProfileScore(userID int, jobID int) (int, error)
 
 	CreateJob(job models.Job) error
 	GetUserByID(userID int, user *models.User) error
@@ -97,4 +101,26 @@ func (u *UserUsecaseImpl) ApplyForJob(application *models.Application) error {
 // Update the total application count for a job
 func (u *UserUsecaseImpl) UpdateJobApplicationsCount(jobID string) error {
 	return u.Repo.UpdateJobApplicationsCount(jobID)
+}
+
+func (u *UserUsecaseImpl) PredictProfileScore(userID int, jobID int) (int, error) {
+	// Fetch job details
+	job, _, err := u.Repo.GetJobDetails(jobID)
+	if err != nil {
+		return 0, err
+	}
+	log.Printf("Fetched Job: %+v", job)
+
+	// Fetch user profile
+	var user models.User
+	err = u.Repo.GetProfileByID(userID, &user)
+	if err != nil {
+		return 0, err
+	}
+	log.Printf("Fetched User Profile: %+v", user.Profile)
+
+	// calulate heuristic score
+	score := services.CalculateHeuristicScore(job, user.Profile)
+	log.Printf("Calculated Heuristic Score: %d", score)
+	return score, nil
 }

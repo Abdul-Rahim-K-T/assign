@@ -278,3 +278,37 @@ func (h *UserHandler) ApplyForJob(w http.ResponseWriter, r *http.Request) {
 		"message": "Successfully applied for the job",
 	})
 }
+
+func (h *UserHandler) PredictProfileScore(w http.ResponseWriter, r *http.Request) {
+
+	// Get the applicant's user ID from the claims
+	claims := jwt.GetClaims(r)
+	if claims == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	userID := claims.UserID
+	log.Printf("userID: %d", userID)
+
+	jobIDStr := r.URL.Query().Get("job_id")
+	log.Printf("jobID: %s", jobIDStr)
+
+	jobID, err := strconv.Atoi(jobIDStr)
+	if err != nil {
+		http.Error(w, "Invalid job ID", http.StatusBadRequest)
+		return
+	}
+
+	// Call usecase to predict the score
+	score, err := h.Usecase.PredictProfileScore(userID, jobID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Printf("Test Score: %d", score)
+
+	// Return the score
+	response := map[string]int{"score": score}
+	json.NewEncoder(w).Encode(response)
+
+}
