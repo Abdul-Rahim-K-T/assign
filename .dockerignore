@@ -1,0 +1,10 @@
+# Binaries
+main
+
+# vendor directory
+vendor/
+
+# Other files to ignore 
+**/.git
+**/.gitignore
+# **/.env

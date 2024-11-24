@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recruitment-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recruitment-management
+  template:
+    metadata:
+      labels:
+        app: recruitment-management
+    spec:
+      containers:
+        - name: recruitment-management
+          image: rahim653/recruitment-management:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+          - configMapRef:
+              name: app-config
+          env:
+            - name: DB_HOST
+              value: db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recruitment-management-service
+spec:
+  selector:
+    app: recruitment-management
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: LoadBalancer

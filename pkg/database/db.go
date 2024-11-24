@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -19,6 +20,13 @@ func InitDB() {
 		log.Fatal("Error loading .env file")
 	}
 
+	// Debug: Log environment variables to ensure they're loaded correctly
+	log.Println("DB_HOST:", os.Getenv("DB_HOST"))
+	log.Println("DB_PORT:", os.Getenv("DB_PORT"))
+	log.Println("DB_USER:", os.Getenv("DB_USER"))
+	log.Println("DB_PASSWORD:", os.Getenv("DB_PASSWORD"))
+	log.Println("DB_NAME:", os.Getenv("DB_NAME"))
+
 	// Create a PostgreSQL connection string
 	connStr := "user=" + os.Getenv("DB_USER") +
 		" password=" + os.Getenv("DB_PASSWORD") +
@@ -27,16 +35,28 @@ func InitDB() {
 		" port=" + os.Getenv("DB_PORT") +
 		" sslmode=disable"
 
-	// Open the connection to the PostgreSQL database
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err)
+	// Retry mechanism for database connection (useful in Docker environments)
+	var db *sql.DB
+	for i := 0; i < 5; i++ {
+		db, err = sql.Open("postgres", connStr)
+		if err != nil {
+			log.Printf("Error opening DB connection (attempt %d): %v", i+1, err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		// Test the connection with Ping
+		err = db.Ping()
+		if err != nil {
+			log.Printf("Error pinging DB (attempt %d): %v", i+1, err)
+			time.Sleep(5 * time.Second)
+		} else {
+			log.Println("Database connected successfully!")
+			break
+		}
 	}
 
-	// Test the database connection
-	err = db.Ping()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to connect to the database after 5 attempts: ", err)
 	}
 
 	DB = db
